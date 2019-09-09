@@ -58,11 +58,11 @@ class IMVTensorLSTM(torch.jit.ScriptModule):
         alphas = alphas/torch.sum(alphas, dim=1, keepdim=True)
         g_n = torch.sum(alphas*outputs, dim=1)
         hg = torch.cat([g_n, h_tilda_t], dim=2)
+        mu = self.Phi(hg)
         betas = self.F_beta_1(torch.tanh(torch.einsum("bij, ijk->bik", hg, self.F_beta_n) + self.F_beta_n_b))
         betas = torch.exp(betas)
         betas = betas/torch.sum(betas, dim=1, keepdim=True)
-        hg = torch.sum(hg*betas, dim=1)
-        mean = self.Phi(hg)
+        mean = torch.sum(betas*mu, dim=1)
         
         return mean, alphas, betas
 
@@ -113,9 +113,9 @@ class IMVFullLSTM(torch.jit.ScriptModule):
         alphas = alphas/torch.sum(alphas, dim=1, keepdim=True)
         g_n = torch.sum(alphas*outputs, dim=1)
         hg = torch.cat([g_n, h_tilda_t], dim=2)
+        mu = self.Phi(hg)
         betas = self.F_beta_1(torch.tanh(torch.einsum("bij, ijk->bik", hg, self.F_beta_n) + self.F_beta_n_b))
         betas = torch.exp(betas)
         betas = betas/torch.sum(betas, dim=1, keepdim=True)
-        hg = torch.sum(hg*betas, dim=1)
-        mean = self.Phi(hg)
+        mean = torch.sum(betas*mu, dim=1)
         return mean, alphas, betas
